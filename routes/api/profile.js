@@ -70,4 +70,49 @@ router.post('/', passport.authenticate('jwt', {session:false}), (req, res) => {
         .catch(err => console.log(err));
 });
 
+
+// @route   /api/profile/user/:username
+// @desc    getting user profile based on USERNAME
+// @access  PUBLIC GET
+router.get('/user/:username', (req, res) => {
+    // req.params is data, we get from the URL
+    Profile.findOne({username: req.params.username})
+        .populate('user', ['name', 'email'])
+        .then(profile => {
+            if (!profile) res.status(404).json({userError: 'Username does not exists'});
+            res.json(profile);
+        })
+        .catch(err => console.log('Error in retrieving user data: ' + err));
+})
+
+
+// @route   /api/profile/id/:id
+// @desc    getting user profile based on user_id
+// @access  PUBLIC GET
+router.get('/id/:id', (req, res) => {
+    // req.params is data, we get from the URL
+    Profile.findById(req.params.id)
+        .populate('user', ['name', 'email'])
+        .then(profile => {
+            if (!profile) res.status(404).json({idError: 'ID does not exists'});
+            res.json(profile);
+        })
+        .catch(err => console.log('Error in retrieving user data using ID: ' + err));
+});
+
+
+// @route   /api/profile/everyone
+// @desc    All USERPROFILE
+// @access  PUBLIC GET
+router.get('/everyone', (req, res) => {
+    // req.params is data, we get from the URL
+    Profile.find()
+        .populate('user', ['name', 'email'])
+        .then(profiles => {
+            if (!profiles) res.status(404).json({userError: 'NO USERs in the database'});
+            res.json(profiles);
+        })
+        .catch(err => console.log('Error in retrieving all user data: ' + err));
+})
+
 module.exports = router;
