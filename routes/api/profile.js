@@ -115,4 +115,64 @@ router.get('/everyone', (req, res) => {
         .catch(err => console.log('Error in retrieving all user data: ' + err));
 })
 
+
+// @route   /api/profile/
+// @desc    route for deleting an UserProfile using ID
+// @access  PRIVATE DELETE
+router.delete('/', passport.authenticate('jwt', {session: false}), (req, res) => {
+    Profile.findOneAndRemove({user: req.user.id})
+        .then(() => {
+            Person.findOneAndRemove({_id: req.user.id})
+                .then(() => res.json({success: 'Profile Deleted'}))
+                .catch(err => console.log('Error in deleting Person: ' + err));
+        })
+        .catch(err => console.log('Error in deleting UserProfile: ' + err));
+});
+
+
+// @route   /api/profile/workrole
+// @desc    route for adding work profile of a person
+// @access  PRIVATE POST
+router.post('/workrole', passport.authenticate('jwt', {session: false}), (req, res) => {
+    Profile.findOne({user: req.user.id})
+        .then(profile => {
+            if (!profile) res.status(404).json({error: 'Profile not found!'});
+            const newWork = {
+                role: req.body.role,
+                company: req.body.company,
+                country: req.body.country,
+                from: req.body.from,
+                to: req.body.to,
+                current: req.body.current
+            };
+            profile.workrole.push(newWork);
+            // profile.workrole.unshift(newWork);
+            profile.save()
+                .then(profile => res.json(profile))
+                .catch(err => console.log('Error in saving a profile: ' + err))
+        })
+        .catch(err => console.log('Error in mywork: ' + err));
+});
+
+
+// @route   /api/profile/delete-workrole/:id
+// @desc    deleting a workrole
+// @access  PRIVATE DELETE
+router.delete('/delete-workrole/:id', passport.authenticate('jwt', {session: false}), (req, res) => {
+    Profile.findOne({user: req.user.id})
+        .then(profile => {
+            if (!profile) res.status(404).json({profileError: 'Profile not found'});
+
+            const removeThis = profile.workrole
+                .map(item => item.id)
+                .indexOf(req.params.id);
+
+            profile.workrole.splice(removeThis, 1);
+            profile.save()
+                .then(profile => res.json(profile))
+                .catch(err => console.log('Error in saving workrole profile: ' + err));
+        })
+        .catch(err => console.log('Error in deleting workrole: ' + err));
+})
+
 module.exports = router;
